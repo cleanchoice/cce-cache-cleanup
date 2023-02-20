@@ -1,0 +1,46 @@
+name: 'cce-cache-cleanup'
+author: 'CleanChoice Energy'
+description: 'Composite action for the GH Actions cache cleanup'
+inputs:
+  cache_size_cleanup_trigger_mb:
+    description: 'Size of the existing cache when cleanup will be triggered'
+    required: true
+  cache_size_to_cleanup_mb:
+    description: 'How many oldest cache need to be deleted'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Install GH CLI extension for cache
+      shell: bash
+      run: gh extension install actions/gh-actions-cache
+    - name: Delete oldest cache entries
+      shell: bash
+      run: |
+        cacheSumSize=$(gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/cache/usage | jq -r '.active_caches_size_in_bytes')
+        cacheSumSize=$(echo $(($cacheSumSize/1000000)))
+
+        if (( $cacheSumSize < ${{ inputs.cache_size_cleanup_trigger }} ));then
+          echo "Cache size in normal state"
+        else
+          echo "Cache size in danger zone of overlimit. Searching of possible cache packages for deletion..."
+          cacheSizes=$(gh actions-cache list --limit 100 --order asc | cut -f 2 | cut -d" " -f1)
+          currentSize=0
+          for cacheSize in $cacheSizes;do
+            cacheSize=$(echo $cacheSize | cut -d'.' -f1)
+            currentSize=$(echo $(($currentSize + $cacheSize)))
+            n=$(($n + 1))
+            if (( $currentSize > ${{ inputs.cache_size_to_cleanup }} ));then
+              break
+            fi
+          done
+          echo "Founded $n pachages for deletion ( size - $currentSize MB )"
+          cacheToDelete=$(gh actions-cache list --limit 100 --order asc | cut -f 1 | head -$n)
+
+          set +e
+          echo "Deleting caches..."
+          for cacheKey in $cacheToDelete;do
+            gh actions-cache delete $cacheKey --confirm
+          done
+          echo "Done"
+        fi
