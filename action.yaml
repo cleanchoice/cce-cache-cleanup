@@ -20,7 +20,7 @@ runs:
         cacheSumSize=$(gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/cache/usage | jq -r '.active_caches_size_in_bytes')
         cacheSumSize=$(echo $(($cacheSumSize/1000000)))
 
-        if (( $cacheSumSize < ${{ inputs.cache_size_cleanup_trigger }} ));then
+        if (( $cacheSumSize < ${{ inputs.cache_size_cleanup_trigger_mb }} ));then
           echo "Cache size in normal state"
         else
           echo "Cache size in danger zone of overlimit. Searching of possible cache packages for deletion..."
@@ -30,7 +30,7 @@ runs:
             cacheSize=$(echo $cacheSize | cut -d'.' -f1)
             currentSize=$(echo $(($currentSize + $cacheSize)))
             n=$(($n + 1))
-            if (( $currentSize > ${{ inputs.cache_size_to_cleanup }} ));then
+            if (( $currentSize > ${{ inputs.cache_size_to_cleanup_mb }} ));then
               break
             fi
           done
