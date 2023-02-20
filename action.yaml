@@ -11,6 +11,7 @@ inputs:
   delete_branch_cache:
     description: 'Trigger to delete only event branch cache'
     required: false
+    default: 'false'
 runs:
   using: 'composite'
   steps:
@@ -20,7 +21,7 @@ runs:
     - name: Delete oldest cache entries
       shell: bash
       run: |
-        if [ ${{ inputs.delete_branch_cache}} == 'true' ];then
+        if [ ${{ inputs.delete_branch_cache }} == 'true' ];then
           BRANCH=${{ github.event.ref }}
 
           echo "Fetching list of cache key"
