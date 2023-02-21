@@ -52,7 +52,7 @@ runs:
                 break
               fi
             done
-            echo "Founded $n pachages for deletion ( size - $currentSize MB )"
+            echo "Founded $n cache packages for deletion ( size - $currentSize MB )"
             cacheToDelete=$(gh actions-cache list --limit 100 --order asc | cut -f 1 | head -$n)
 
             set +e
