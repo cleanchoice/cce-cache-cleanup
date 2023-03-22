@@ -53,13 +53,14 @@ runs:
               fi
             done
             echo "Founded $n cache packages for deletion ( size - $currentSize MB )"
-            cacheToDelete=$(gh actions-cache list --limit 100 --order asc | tail -n +1 | cut -f 1 | head -$n)
+            gh actions-cache list --limit 100 --order asc > cacheToDelete.txt
 
             set +e
             echo "Deleting caches..."
-            for cacheKey in $cacheToDelete;do
+            for cacheKey in $(cat cacheToDelete.txt | cut -f 1 | head -$n);do
               gh actions-cache delete $cacheKey --confirm
             done
+            rm -rf cacheToDelete.txt
             echo "Done"
           fi
         fi
